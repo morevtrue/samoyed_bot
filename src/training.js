@@ -76,6 +76,20 @@ export const MORNING_TIP_TOPICS = [
 ];
 
 /**
+ * Список команд для отслеживания прогресса
+ */
+export const COMMANDS = [
+  { id: 'sit', name: 'Сидеть', target: 10, category: 'basic' },
+  { id: 'down', name: 'Лежать', target: 10, category: 'basic' },
+  { id: 'come', name: 'Ко мне', target: 10, category: 'basic' },
+  { id: 'paw', name: 'Дай лапу', target: 10, category: 'basic' },
+  { id: 'heel', name: 'Рядом', target: 20, category: 'advanced' },
+  { id: 'wait', name: 'Жди', target: 15, category: 'advanced' },
+  { id: 'place', name: 'Место', target: 15, category: 'advanced' },
+  { id: 'stop', name: 'Фу/Нельзя', target: 20, category: 'discipline' },
+];
+
+/**
  * Быстрые советы для кнопки "Паника" (SOS)
  * ВСЕ СОВЕТЫ УЧИТЫВАЮТ СПЕЦИФИКУ САМОЕДОВ
  */

@@ -26,52 +26,30 @@
 
 ## Структура файлов
 
-### `index.js` — главный файл
+### `src/handlers/` — Модули логики
+Каждая функциональная область вынесена в отдельный файл:
+- `feeding.js`: Логика калькулятора корма, меню питания.
+- `activity.js`: Трекинг прогулок и туалета.
+- `health.js`: Вакцинация, трекер веса, графики.
+- `training.js`: Задания, прогресс команд.
+- `schedule.js`: Управление расписанием.
+- `assistance.js`: AI, SOS и база знаний.
+
+### `index.js` — Точка входа
 **Отвечает за:**
-- Инициализацию Telegraf
-- Обработку команд (`/start`)
-- Обработку кнопок (callback queries)
-- Обработку текстовых сообщений (AI)
-- Главное меню и навигацию
+- Инициализацию бота и БД
+- Подключение модулей (`init*Handlers`)
+- Глобальную обработку текста (регистрация и роутинг)
+- Запуск планировщика (`scheduler.js`)
 
-**Основные секции:**
+**Пример инициализации:**
 ```javascript
-// Создание бота
-const bot = new Telegraf(config.botToken);
-
-// Обработка ошибок
-bot.catch((err, ctx) => { ... });
-
-// Главное меню
-function getMainMenu() { ... }
-
-// Команда /start
-bot.start(async (ctx) => { ... });
-
-// Обработчики главного меню
-bot.action('menu_plan', ...);
-bot.action('menu_tracker', ...);
-bot.action('menu_knowledge', ...);
-bot.action('menu_ai', ...);
-bot.action('menu_sos', ...);
-
-// Обработчики трекера
-bot.action('track_feed', ...);
-bot.action('track_walk_ok', ...);
-
-// Обработчики базы знаний
-bot.action(/^kb_cat_(.+)$/, ...);
-bot.action(/^kb_item_(.+)_(\d+)$/, ...);
-
-// Обработчики SOS
-bot.action(/^sos_(.+)$/, ...);
-bot.action('sos_custom', ...);
-
-// Обработка текста (AI)
-bot.on('text', async (ctx) => { ... });
+// Инициализация модулей
+initFeedingHandlers(bot);
+const { showVaccinationMenu } = initHealthHandlers(bot, userBirthDateParams, ...);
 
 // Запуск
-async function main() { ... }
+await bot.launch();
 ```
 
 ### `database.js` — работа с SQLite
