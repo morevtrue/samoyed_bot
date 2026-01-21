@@ -20,6 +20,7 @@ import {
 } from './training.js';
 import { askExpert, generateMorningTip } from './ai.js';
 import { scheduleMorningTip } from './scheduler.js';
+import { logger } from './logger.js';
 
 // Создание бота
 const bot = new Telegraf(config.botToken);
@@ -33,10 +34,18 @@ const userAiMode = new Map();
 bot.catch((err, ctx) => {
   // Игнорируем ошибки устаревших callback-запросов при перезапуске бота
   if (err.message.includes('query is too old')) {
-    console.log('⏰ Пропущен устаревший callback-запрос');
+    logger.info('Skipped outdated callback query');
     return;
   }
-  console.error('❌ Ошибка бота:', err.message);
+  
+  // Логируем ошибку
+  logger.error('Bot error', {
+    error: err.message,
+    stack: err.stack,
+    userId: ctx.from?.id,
+    username: ctx.from?.username,
+    updateType: ctx.updateType,
+  });
 });
 
 // ============================================

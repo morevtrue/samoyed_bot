@@ -8,7 +8,12 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js"
   },
-  "keywords": ["telegram", "bot", "samoyed", "dog-training"],
+  "keywords": [
+    "telegram",
+    "bot",
+    "samoyed",
+    "dog-training"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
