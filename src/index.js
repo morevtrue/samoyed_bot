@@ -53,11 +53,16 @@ const MAIN_MENU = Markup.inlineKeyboard([
   [Markup.button.callback('🎓 Тренировки', 'menu_training')],
   [Markup.button.callback('💉 Прививки', 'menu_vaccinations'), Markup.button.callback('⚖️ Вес', 'menu_weight')],
   [Markup.button.callback('⏰ Режим дня', 'menu_schedule')],
-  [Markup.button.callback('🧠 AI-Эксперт', 'menu_ai'), Markup.button.callback('🆘 Паника', 'menu_sos')]
+  [Markup.button.callback('🆘 Паника', 'menu_sos')],
+  [Markup.button.callback('🔄 Начать заново', 'cmd_reset')]
 ]);
 
 const MENU_BUTTON = Markup.inlineKeyboard([
   [Markup.button.callback('📋 Меню', 'menu_main')]
+]);
+
+const START_BUTTON = Markup.inlineKeyboard([
+  [Markup.button.callback('🚀 Начать', 'cmd_start')]
 ]);
 
 // Инициализация модулей и получение функций меню
@@ -100,7 +105,45 @@ bot.command('reset', async (ctx) => {
   userScheduleParams.delete(userId);
   userAiMode.delete(userId);
   
-  await ctx.reply('🗑️ Ваши данные удалены. Отправьте /start, чтобы начать заново.');
+  await ctx.reply('🗑️ Ваши данные удалены. Нажмите кнопку ниже, чтобы начать заново.', { ...START_BUTTON });
+});
+
+// Обработчик кнопки "Начать заново"
+bot.action('cmd_reset', async (ctx) => {
+  await ctx.answerCbQuery();
+  const userId = ctx.from.id;
+  resetUserData(userId);
+  
+  // Очищаем локальные состояния
+  userRegistrationState.delete(userId);
+  userRegistrationDateState.delete(userId);
+  userBirthDateParams.delete(userId);
+  userWeightParams.delete(userId);
+  userScheduleParams.delete(userId);
+  userAiMode.delete(userId);
+  
+  await ctx.editMessageText('🗑️ Ваши данные удалены. Нажмите кнопку ниже, чтобы начать заново.', { ...START_BUTTON });
+});
+
+// Обработчик кнопки "Начать"
+bot.action('cmd_start', async (ctx) => {
+  await ctx.answerCbQuery();
+  const userId = ctx.from.id;
+  const firstName = ctx.from.first_name || 'друг';
+  
+  subscribeUser(userId);
+  
+  const puppyName = getPuppyName(userId);
+  
+  if (!puppyName) {
+    userRegistrationState.set(userId, true);
+    return ctx.editMessageText(`👋 Привет, ${firstName}!\n\nЯ твой помощник в воспитании самоеда.\n\nДавай познакомимся! Как зовут твоего щенка? 🐶\n_(Напиши имя в ответ)_`, { parse_mode: 'Markdown' });
+  }
+  
+  await ctx.editMessageText(getWelcomeMessage(firstName, puppyName), { 
+    parse_mode: 'Markdown',
+    ...MAIN_MENU
+  });
 });
 
 bot.start(async (ctx) => {
@@ -113,7 +156,7 @@ bot.start(async (ctx) => {
   
   if (!puppyName) {
     userRegistrationState.set(userId, true);
-    return ctx.reply(`👋 Привет, ${firstName}!\n\nЯ твой помощник в воспитании самоеда.\n\nДавай познакомимся! Как зовут твоего щенка? 🐶\n_(Напиши имя в ответ)_`);
+    return ctx.reply(`👋 Привет, ${firstName}!\n\nЯ твой помощник в воспитании самоеда.\n\nДавай познакомимся! Как зовут твоего щенка? 🐶\n_(Напиши имя в ответ)_`, { parse_mode: 'Markdown' });
   }
   
   await ctx.reply(getWelcomeMessage(firstName, puppyName), { 
@@ -288,28 +331,31 @@ bot.on('text', async (ctx) => {
     return showScheduleMenu(ctx, userId);
   }
 
-  // 5. AI Вопросы
+  // 5. AI Вопросы - теперь работает ВСЕГДА (если не ожидается ввод данных)
   const question = ctx.message.text;
   if (question.startsWith('/')) return;
   
-  const aiMode = userAiMode.get(userId);
-  if (!aiMode) return; 
-  
+  // AI отвечает на любое сообщение
   await ctx.sendChatAction('typing');
   
   try {
+    // Проверяем, есть ли активный режим паники
+    const aiMode = userAiMode.get(userId) || 'normal';
     const answer = await askExpert(question, aiMode);
     
     await ctx.reply(answer, {
       parse_mode: 'Markdown',
       ...MENU_BUTTON
     });
-    userAiMode.delete(userId);
+    
+    // Очищаем режим паники после ответа (если был)
+    if (userAiMode.has(userId)) {
+      userAiMode.delete(userId);
+    }
     
   } catch (error) {
     console.error('Ошибка обработки вопроса:', error);
     await ctx.reply('😔 Произошла ошибка. Попробуйте ещё раз.');
-    userAiMode.delete(userId);
   }
 });
 
