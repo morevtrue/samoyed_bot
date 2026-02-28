@@ -1,0 +1,28 @@
+services:
+  samoyed-bot:
+    build: .
+    container_name: samoyed-bot
+    restart: unless-stopped
+    networks:
+      - traefik_public
+    volumes:
+      - samoyed_bot_data:/app/data
+    env_file:
+      - .env
+    environment:
+      - DATABASE_PATH=/app/data/bot.db
+      - TZ=Europe/Moscow
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "traefik.enable=false"
+
+networks:
+  traefik_public:
+    external: true
+
+volumes:
+  samoyed_bot_data:

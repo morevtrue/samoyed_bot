@@ -121,6 +121,87 @@ samoyed_bot/
    - Для срочных проблем: **SOS → "✍️ Написать свою проблему"**
 4. Отмечайте кормления и прогулки в разделе **"📊 Трекер"**
 
+## Деплой через Docker
+
+### Требования
+- Docker 24+
+- Docker Compose v2+
+- Traefik уже запущен на сервере (создаёт сеть `traefik_public`)
+
+### Шаги
+
+1. **Скопировать .env.example**
+```bash
+cp .env.example .env
+```
+
+2. **Заполнить .env** — вписать реальные токены:
+```env
+BOT_TOKEN=your_telegram_bot_token
+GITHUB_TOKEN=your_github_token
+```
+
+3. **Собрать образ**
+```bash
+docker compose build
+```
+
+4. **Запустить**
+```bash
+docker compose up -d
+```
+
+5. **Остановить**
+```bash
+docker compose down
+```
+
+### Логи
+
+```bash
+docker logs samoyed-bot
+docker logs -f samoyed-bot        # следить в реальном времени
+docker logs --tail 100 samoyed-bot
+```
+
+### Бэкап базы данных
+
+```bash
+docker run --rm -v samoyed_bot_data:/data -v $(pwd):/backup alpine \
+  tar czf /backup/bot-backup.tar.gz -C /data .
+```
+
+### Восстановление базы данных
+
+```bash
+docker run --rm -v samoyed_bot_data:/data -v $(pwd):/backup alpine \
+  tar xzf /backup/bot-backup.tar.gz -C /data
+```
+
+### Troubleshooting
+
+**Контейнер не запускается — ошибка сети:**
+```bash
+# Убедитесь, что Traefik запущен и сеть существует
+docker network ls | grep traefik_public
+```
+
+**Ошибка переменных окружения:**
+```bash
+# Проверьте, что .env заполнен
+cat .env
+```
+
+**Проверить статус health check:**
+```bash
+docker inspect samoyed-bot --format='{{.State.Health.Status}}'
+```
+
+**Пересобрать после изменений кода:**
+```bash
+docker compose build && docker compose up -d
+```
+
 ## Лицензия
 
 MIT
